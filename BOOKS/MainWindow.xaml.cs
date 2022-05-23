@@ -67,7 +67,7 @@ namespace BOOKS
 
         private string year;
 
-        public string YAER
+        public string Year
         {
             get { return year; }
             set
@@ -78,7 +78,7 @@ namespace BOOKS
         }
         private int theme_id;
 
-        public int THEME_ID
+        public int Theme_ID
         {
             get { return theme_id; }
             set
@@ -111,7 +111,7 @@ namespace BOOKS
         }
         private int press_id;
 
-        public int PRESS_id
+        public int Press_id
         {
             get { return press_id; }
             set
@@ -133,6 +133,20 @@ namespace BOOKS
         }
         private string quality;
 
+        public Book(int id,  string nAME, string pages, string year, int theme_ID, int catagory_id,  int author_id,  int press_id, string comment, string quality)
+        {
+            this.id=id;
+            NAME=nAME;
+            Pages=pages;
+            Year=year;
+            Theme_ID=theme_ID;
+            Catagory_id=catagory_id;
+            Author_id=author_id;
+            Press_id=press_id;
+            Comment=comment;
+            Quality=quality;
+        }
+
         public string Quality
         {
             get { return quality; }
@@ -153,11 +167,19 @@ namespace BOOKS
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        ObservableCollection<string> listboxin = new ObservableCollection<string>();
- 
+        ObservableCollection<Book> listboxin = new ObservableCollection<Book>();
+        SqlDataReader reader = null;
+        DataTable table = null;
+
+        SqlDataAdapter dataAdapter = null;
+        DataSet dataSet = null;
+        SqlCommandBuilder cmdBuilder = null;
+
         List<string> authors = new List<string>();
         List<string> catagorys = new List<string>();
-
+        List<string> themes = new List<string>();
+        List<string> presss = new List<string>();
+        string query=null;
         public void SelectAuthor()
         {
             SqlDataReader reader = null;
@@ -198,6 +220,44 @@ namespace BOOKS
                 reader?.Close();
             }
         }
+        public void Selectthemes()
+        {
+            SqlDataReader reader = null;
+            try
+            {
+                sqlConnection.Open();
+                var cmd = new SqlCommand("Select * From Themes", sqlConnection);
+                reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    themes.Add((reader["Name"]).ToString());
+                }
+            }
+            finally
+            {
+                sqlConnection?.Close();
+                reader?.Close();
+            }
+        }
+        public void SelectPress()
+        {
+            SqlDataReader reader = null;
+            try
+            {
+                sqlConnection.Open();
+                var cmd = new SqlCommand("Select * From Press", sqlConnection);
+                reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    presss.Add((reader["Name"]).ToString());
+                }
+            }
+            finally
+            {
+                sqlConnection?.Close();
+                reader?.Close();
+            }
+        }
         public MainWindow() 
         {
             InitializeComponent();
@@ -205,10 +265,15 @@ namespace BOOKS
             sqlConnection = new SqlConnection(conStr);
             SelectAuthor();
             SelectCatagory();
+            SelectPress();
+            Selectthemes();
             combobox_author.ItemsSource = authors;
             combobox_catagory.ItemsSource = catagorys;
             listbox_books.ItemsSource=listboxin;
-   
+            combobox_catagories.ItemsSource = catagorys;
+            combobox_themes.ItemsSource = themes;
+            combobox_press.ItemsSource = presss;
+            combobox_authors.ItemsSource = authors;
             DataContext =this;
         }
 
@@ -231,8 +296,84 @@ namespace BOOKS
 
         private void author_button_Click(object sender, RoutedEventArgs e)
         {
-         
-            if (combobox_author.SelectedItem!=null)
+            if ( combobox_catagory.SelectedItem!=null && combobox_catagory.SelectedItem!=null)
+            {
+                listboxin.Clear();
+                SqlDataReader reader = null;
+                try
+                {
+
+                    sqlConnection.Open();
+                
+                    dataAdapter=new SqlDataAdapter();
+                    dataAdapter.SelectCommand = new SqlCommand(
+"select A.Id,A.Name,A.Pages,	A.YearPress,T.Name AS Themes_NAME,C.Name AS CATAGORY_NAME,B.FirstName AS ARTHUR_ID,P.Name AS PRESS_NAME,a.Comment,A.Quantity from Authors B INNER JOIN   Books  A   "
++ "   ON B.Id=A.Id_Author          "
++ "   INNER JOIN   Press  P        "
++ "   ON P.Id=A.Id_Press           "
++ "   INNER JOIN   Themes T        "
++ "   ON T.Id=A.Id_Themes          "
++ "   INNER JOIN   Categories C    "
++ "   ON C.Id=A.Id_Category  where B.FirstName=@LAZIM AND C.Name=@OPTION", sqlConnection);
+                    query="select A.Id,A.Name,A.Pages,	A.YearPress,A.Id_Themes,A.Id_Category,A.Id_Author,A.Id_Press,a.Comment,A.Quantity from Authors B INNER JOIN   Books  A  ON B.Id=A.Id_Author INNER JOIN   Categories C ON A.Id_Category=C.Id where B.FirstName=@LAZIM AND C.Name=@OPTION";
+                    dataAdapter.SelectCommand.Parameters.AddWithValue("@LAZIM", combobox_author.SelectedItem);
+                    dataAdapter.SelectCommand.Parameters.AddWithValue("@OPTION", combobox_catagory.SelectedItem);
+                    cmdBuilder = new SqlCommandBuilder(dataAdapter);
+                    dataSet = new DataSet();
+                    dataAdapter.Fill(dataSet);
+                    listbox_books.ItemsSource = dataSet.Tables[0].DefaultView;
+                
+
+
+
+                }
+                finally
+                {
+                    sqlConnection?.Close();
+                    reader?.Close();
+                }
+            }
+            else if (combobox_catagory.SelectedItem!=null)
+            {
+                listboxin.Clear();
+                SqlDataReader reader = null;
+                try
+                {
+                    sqlConnection.Open();
+                    dataAdapter=new SqlDataAdapter();
+
+
+                    dataAdapter.SelectCommand = new SqlCommand(
+      "select A.Id,A.Name,A.Pages,	A.YearPress,T.Name AS Themes_NAME,C.Name AS CATAGORY_NAME,B.FirstName AS ARTHUR_ID,P.Name AS PRESS_NAME,a.Comment,A.Quantity from Authors B INNER JOIN   Books  A   "
++ "   ON B.Id=A.Id_Author          "
++ "   INNER JOIN   Press  P        "
++ "   ON P.Id=A.Id_Press           "
++ "   INNER JOIN   Themes T        "
++ "   ON T.Id=A.Id_Themes          "
++ "   INNER JOIN   Categories C    "
++ "   ON C.Id=A.Id_Category  where B.Name=@LAZIM", sqlConnection);
+                    dataAdapter.SelectCommand.Parameters.AddWithValue("@LAZIM", combobox_catagory.SelectedItem);
+
+
+                    cmdBuilder = new SqlCommandBuilder(dataAdapter);
+
+                    dataSet = new DataSet();
+
+                    dataAdapter.Fill(dataSet);
+
+                    listbox_books.ItemsSource =dataSet.Tables[0].DefaultView;
+
+
+
+
+                }
+                finally
+                {
+                    sqlConnection?.Close();
+                    reader?.Close();
+                }
+            }
+            else if (combobox_author.SelectedItem!=null)
             {
                 listboxin.Clear();
                 SqlDataReader reader = null;
@@ -240,19 +381,29 @@ namespace BOOKS
                 {
                     
                     sqlConnection.Open();
-                    var cmd = new SqlCommand("select A.Name from Authors B INNER JOIN   Books  A  ON B.Id=A.Id_Author where B.FirstName=@LAZIM", sqlConnection);
+                    dataAdapter=new SqlDataAdapter();
 
-                    cmd.Parameters.AddWithValue("@LAZIM", combobox_author.SelectedItem);
+                  
+                    dataAdapter.SelectCommand = new SqlCommand(
+                   "select A.Id,A.Name,A.Pages,	A.YearPress,T.Name AS Themes_NAME,C.Name AS CATAGORY_NAME,B.FirstName AS ARTHUR_ID,P.Name AS PRESS_NAME,a.Comment,A.Quantity from Authors B INNER JOIN   Books  A   "
++ "   ON B.Id=A.Id_Author          "  
++ "   INNER JOIN   Press  P        "
++ "   ON P.Id=A.Id_Press           "
++ "   INNER JOIN   Themes T        "
++ "   ON T.Id=A.Id_Themes          "
++ "   INNER JOIN   Categories C    "
++ "   ON C.Id=A.Id_Category where B.FirstName=@LAZIM", sqlConnection);
+                    dataAdapter.SelectCommand.Parameters.AddWithValue( "@LAZIM", combobox_author.SelectedItem);
+                    query= "select A.Id,A.Name,A.Pages,	A.YearPress,A.Id_Themes,A.Id_Category,A.Id_Author,A.Id_Press,a.Comment,A.Quantity from Authors B INNER JOIN   Books  A  ON B.Id=A.Id_Author where B.FirstName=@LAZIM";
+                    cmdBuilder = new SqlCommandBuilder(dataAdapter);
+                    dataSet = new DataSet();
+                    
+                    dataAdapter.Fill(dataSet);
+                    
+                    listbox_books.ItemsSource =dataSet.Tables[0].DefaultView;
 
-                    reader = cmd.ExecuteReader();
-                    
-                    while (reader.Read())
-                    {
-                        listboxin.Add(reader[0].ToString());
-                    }
-                   
-                      
-                    
+
+
                 }
                 finally
                 {
@@ -262,35 +413,166 @@ namespace BOOKS
             }
         }
 
-        private void Catagory_button_Click(object sender, RoutedEventArgs e)
+ 
+
+           
+
+      
+        private void update_button_Click(object sender, RoutedEventArgs e)
         {
-            if (combobox_catagory.SelectedItem!=null)
+            
+                dataAdapter.Update(dataSet);
+       
+        }
+
+        private void book_button_Click(object sender, RoutedEventArgs e)
+        {
+            string selectQuery = "select A.Id,A.Name,A.Pages,	A.YearPress,T.Name AS Themes_NAME,C.Name AS CATAGORY_NAME,B.FirstName AS ARTHUR_ID,P.Name AS PRESS_NAME,a.Comment,A.Quantity from Authors B INNER JOIN   Books  A   "
++ "   ON B.Id=A.Id_Author          "
++ "   INNER JOIN   Press  P        "
++ "   ON P.Id=A.Id_Press           "
++ "   INNER JOIN   Themes T        "
++ "   ON T.Id=A.Id_Themes          "
++ "   INNER JOIN   Categories C    "
++ "   ON C.Id=A.Id_Category";
+            dataAdapter = new SqlDataAdapter(selectQuery, sqlConnection);
+            cmdBuilder = new SqlCommandBuilder(dataAdapter);
+            dataSet = new DataSet();
+            dataAdapter.Fill(dataSet);
+            listbox_books.ItemsSource =dataSet.Tables[0].DefaultView;
+        }
+
+    
+        private void BUTTON_ADD_Click(object sender, RoutedEventArgs e)
+        {
+            book_button_Click(sender, e);
+            dataAdapter.InsertCommand = new SqlCommand("insert into Books(id,name,Pages,YearPress,Id_Themes,Id_Category,Id_Author,Id_Press,Comment,Quantity) values(@id,@name,@Pages,@YearPress,@Id_Themes,@Id_Category,@Id_Author,@Id_Press,@Comment,@Quantity)", sqlConnection);
+          
+            try
             {
-                listboxin.Clear();
+               
+           
+                //////////////////////////////////////////////////////
+                int THEME_INDEX = 0;
+                int AUTHOR_INDEX = 0;
+                int CATAGORY_INDEX = 0;
+                int PRESS_INDEX = 0;
                 SqlDataReader reader = null;
                 try
                 {
-
                     sqlConnection.Open();
-                    var cmd = new SqlCommand("select A.Name from Categories B INNER JOIN   Books  A  ON B.Id=A.Id_Category where B.Name=@LAZIM", sqlConnection);
-
-                    cmd.Parameters.AddWithValue("@LAZIM", combobox_catagory.SelectedItem);
-
-                    reader = cmd.ExecuteReader();
-
+                    var lazimli = new SqlCommand("Select Id From Press  WHERE Name=@LAZIM  ", sqlConnection);
+                    lazimli.Parameters.AddWithValue("@LAZIM", combobox_press.SelectedItem);
+                    reader = lazimli.ExecuteReader();
                     while (reader.Read())
                     {
-                        listboxin.Add(reader[0].ToString());
+                        PRESS_INDEX=int.Parse( reader[0].ToString());
                     }
-
-
-
                 }
                 finally
                 {
                     sqlConnection?.Close();
                     reader?.Close();
                 }
+                //////////////////////////////////////////////////////
+                try
+                {
+                    sqlConnection.Open();
+                    var lazimli = new SqlCommand("Select Id From Authors  WHERE FirstName=@LAZIM  ", sqlConnection);
+                    lazimli.Parameters.AddWithValue("@LAZIM", combobox_authors.SelectedItem);
+                    reader = lazimli.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        AUTHOR_INDEX=int.Parse(reader[0].ToString());
+                    }
+                }
+                finally
+                {
+                    sqlConnection?.Close();
+                    reader?.Close();
+                }
+                //////////////////////////////////////////////////////
+                try
+                {
+                    sqlConnection.Open();
+                    var lazimli = new SqlCommand("Select Id From Categories  WHERE Name=@LAZIM  ", sqlConnection);
+                    lazimli.Parameters.AddWithValue("@LAZIM", combobox_catagories.SelectedItem);
+                    reader = lazimli.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        CATAGORY_INDEX=int.Parse(reader[0].ToString());
+                    }
+                }
+                finally
+                {
+                    sqlConnection?.Close();
+                    reader?.Close();
+                }
+                //////////////////////////////////////////////////////
+                try
+                {
+                    sqlConnection.Open();
+                    var lazimli = new SqlCommand("Select Id From Themes  WHERE Name=@LAZIM  ", sqlConnection);
+                    lazimli.Parameters.AddWithValue("@LAZIM", combobox_themes.SelectedItem);
+                    reader = lazimli.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        THEME_INDEX=int.Parse(reader[0].ToString());
+                    }
+                }
+                finally
+                {
+                    sqlConnection?.Close();
+                    reader?.Close();
+                }
+
+                dataAdapter.InsertCommand.Parameters.AddWithValue("@id", int.Parse(textbox_id.Text));
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@name", textbox_name.Text);
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@Pages", int.Parse(textbox_pages.Text));
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@YearPress", int.Parse(textbox_year.Text));
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@Id_Themes", THEME_INDEX);
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@Id_Author", AUTHOR_INDEX);
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@Id_Category", CATAGORY_INDEX);
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@Id_Press", PRESS_INDEX);
+                 dataAdapter.InsertCommand.Parameters.AddWithValue("@Comment", textbox_comment.Text);
+                dataAdapter.InsertCommand.Parameters.AddWithValue("@Quantity", int.Parse(textbox_quality.Text));
+                
+                
+                try
+                {
+                    sqlConnection.Open();
+                    
+                    cmdBuilder = new SqlCommandBuilder(dataAdapter);
+                    dataSet = new DataSet();
+
+                    dataAdapter.Fill(dataSet);
+                    
+                    dataAdapter.InsertCommand.ExecuteNonQuery();
+                    dataAdapter.Update(dataSet);
+                    book_button_Click(sender,e);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString());
+                }
+            }
+           
+            finally
+            {
+                sqlConnection.Close();
+            }
+
+           
+        }
+
+        private void DELETE_button_Click(object sender, RoutedEventArgs e)
+        {
+            
+            if (axtaris_textbox.Text!=null)
+            {
+                DataRowView row = (DataRowView)listbox_books.SelectedItem;
+                
+                dataSet.Rows.Remove(row.Row);
             }
         }
     }
