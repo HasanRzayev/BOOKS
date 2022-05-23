@@ -568,12 +568,12 @@ namespace BOOKS
         private void DELETE_button_Click(object sender, RoutedEventArgs e)
         {
             
-            if (axtaris_textbox.Text!=null)
-            {
-                DataRowView row = (DataRowView)listbox_books.SelectedItem;
+            //if (axtaris_textbox.Text!=null)
+            //{
+            //    DataRowView row = (DataRowView)listbox_books.SelectedItem;
                 
-                dataSet.Rows.Remove(row.Row);
-            }
+            //    dataSet.Rows.Remove(row.Row);
+            //}
         }
     }
 }
